@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Start a generator run. usage: scripts/start_run.sh TEST_ID [objects_per_second] [duration_seconds] [scenario]
 # TARGET defaults to the compose network address; when the generator runs via plain
-# `docker run`, use TARGET=http://host.docker.internal:8000/ingest
+# `docker run`, use TARGET=http://host.docker.internal:18000/ingest
 set -e
 TID=${1:?test_id required}; RATE=${2:-2000}; DUR=${3:-120}; SCEN=${4:-evolving}
 TARGET=${TARGET:-http://observatory:8000/ingest}

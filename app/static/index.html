@@ -3,138 +3,516 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>宇宙万物观测站 · Cosmos Observatory</title>
+<title>宇宙万物观测站</title>
 <style>
-:root{--bg:#0b0f17;--panel:#121826;--line:#232c3f;--text:#dde4f0;--mute:#8592a8;--acc:#6aa8ff;--ok:#4cc38a;--warn:#f2b84b;--bad:#ef6b6b}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif}
-header{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line)}
-header h1{font-size:16px;margin:0;font-weight:600}header select,input{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
-.live{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:6px;box-shadow:0 0 6px var(--ok)}
-.kpis{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;padding:10px 16px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}.kpi b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.kpi span{color:var(--mute);font-size:11px}
-main{display:grid;grid-template-columns:300px 1fr 380px;gap:10px;padding:0 16px 16px;height:calc(100vh - 128px)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;min-height:0}
-.panel h2{font-size:12px;color:var(--mute);margin:0;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:500;display:flex;justify-content:space-between;align-items:center}
-.scroll{overflow:auto;flex:1;min-height:0}
-.tree ul{list-style:none;margin:0;padding-left:14px}.tree>ul{padding-left:6px}
-.node{display:flex;justify-content:space-between;padding:2px 6px;border-radius:4px;cursor:pointer;white-space:nowrap}
-.node:hover{background:#1b2336}.node.sel{background:#1f3355}.node .c{color:var(--mute);font-variant-numeric:tabular-nums;margin-left:8px}
-.tog{display:inline-block;width:12px;color:var(--mute)}
-.tabs{display:flex;gap:2px}.tabs button{background:none;border:0;color:var(--mute);padding:4px 10px;cursor:pointer;border-radius:5px}.tabs button.on{background:#1f3355;color:var(--text)}
-table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
-th{color:var(--mute);font-weight:500;position:sticky;top:0;background:var(--panel)}tbody tr{cursor:pointer}tbody tr:hover{background:#1b2336}
-.tool{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}.tool input{flex:1}
-button.b{background:#1f3355;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
-pre{margin:0;padding:10px;font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all}
-.crumb{padding:8px 10px;color:var(--acc);border-bottom:1px solid var(--line)}
-.attr{padding:6px 10px;border-bottom:1px solid var(--line)}.attr .k{font-weight:600}.attr .m{color:var(--mute);font-size:11px}
-.bar{height:4px;background:var(--acc);border-radius:2px;margin-top:3px}
-canvas{display:block;width:100%}.legend{display:flex;flex-wrap:wrap;gap:8px;padding:6px 10px;font-size:11px;color:var(--mute)}
-.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
-.log div{padding:3px 10px;border-bottom:1px solid var(--line);font-size:12px}.muted{color:var(--mute)}
-.split{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
-main>*{min-width:0}
+:root{
+  --paper:#F3F4F6; --surface:#FFFFFF; --ink:#141922; --ink2:#4A5263; --ink3:#7A8293;
+  --rule:#E2E5EA; --rule2:#CDD2D9; --hover:#F0F3F7; --accent:#1C5CAB; --accent-soft:#E6EEF8;
+  --good:#1E7A46; --good-soft:#E7F3EC;
+  --plate:#0E2236; --plate-ink:#D8E4F0;
+  /* categorical slots, fixed order (validated reference palette, light / dark) */
+  --c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--c6:#008300;--c7:#6250d6;--c-other:#A6ADB8;
+  --serif:"Songti SC","Noto Serif SC","Source Han Serif SC",STSong,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.55 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- top line ---------- */
+.top{display:flex;align-items:center;gap:24px;padding:0 32px;height:58px;background:var(--surface);border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:5}
+.nav{display:flex;gap:4px;height:100%}
+.nav a{display:flex;align-items:center;padding:0 14px;color:var(--ink2);text-decoration:none;border-bottom:2px solid transparent;font-size:14px}
+.nav a:hover{color:var(--ink)}
+.nav a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.page:not(.on){display:none!important}
+.top h1{font:700 21px/1 var(--serif);margin:0;letter-spacing:.04em}
+.status{display:inline-flex;align-items:center;gap:8px;color:var(--ink2);font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ink3)}
+.dot.on{background:var(--good);box-shadow:0 0 0 3px var(--good-soft)}
+.dot.err{background:#B3261E}
+.top .run{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:13px}
+.top select{border:1px solid var(--rule2);background:var(--surface);border-radius:6px;padding:6px 10px;min-width:240px;color:var(--ink)}
+
+/* ---------- 总览 page: one screen ---------- */
+.home{height:calc(100vh - 58px);min-height:620px;padding:28px 32px 32px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:24px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:22px 24px;min-height:0;min-width:0;display:flex;flex-direction:column}
+.card h2{font:600 16px/1.3 var(--serif);margin:0 0 4px;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.card h2 span{font:400 12px var(--sans);color:var(--ink3)}
+.hero{grid-column:1/-1;display:flex;align-items:flex-end;gap:40px;flex-wrap:wrap;padding:6px 2px 0}
+.headline .lbl{font-size:13px;color:var(--ink3);margin-bottom:4px}
+.big{font:600 56px/1 var(--sans);letter-spacing:-.02em}
+.headline .say{color:var(--ink2);font-size:14px;margin-top:8px}
+.hero .facts{display:flex;gap:36px;margin-left:auto;align-items:flex-end}
+.hero .facts div{font-size:13px;color:var(--ink3)}
+.hero .facts b{display:block;font-size:24px;color:var(--ink);font-weight:600;line-height:1.15}
+.go{border:0;background:var(--ink);color:#fff;border-radius:8px;padding:11px 18px;font-size:14px;cursor:pointer;white-space:nowrap}
+.go:hover{background:#2A3240}
+.band{display:flex;height:34px;gap:2px;margin:14px 0 16px;flex:none}
+.band button{border:0;padding:0;height:100%;cursor:pointer;min-width:3px;transition:filter .12s}
+.band button:first-child{border-radius:5px 0 0 5px}.band button:last-child{border-radius:0 5px 5px 0}
+.band button:hover{filter:brightness(.88)}
+.cats{overflow:auto;min-height:0;flex:1}
+.cats table{border:0;border-radius:0}
+.cats td{padding:8px 6px;border-bottom:1px solid var(--rule)}
+.cats tr{cursor:pointer}.cats tr.other{cursor:default}
+.cats tr:hover:not(.other){background:var(--hover)}
+.cats .nm{display:flex;align-items:center;gap:10px}.cats .nm i{width:10px;height:10px;border-radius:2px;flex:none}
+.cats .share{width:38%}.cats .share span{display:block;height:6px;border-radius:3px}
+.cats .r{text-align:right;color:var(--ink2);width:72px}.cats .pc{text-align:right;font-weight:600;width:56px}
+.cats .note{color:var(--ink3);font-size:12px;white-space:normal}
+.side-col{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:24px;min-height:0}
+.flowstats{display:flex;gap:28px;margin:10px 0 6px}
+.flowstats div{font-size:12px;color:var(--ink3)}
+.flowstats b{display:block;font-size:19px;color:var(--ink);font-weight:600;line-height:1.2}
+.chart{position:relative;flex:1;min-height:110px}
+.chart svg{display:block;width:100%;height:100%;overflow:visible}
+.chart .tt{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:5px 8px;border-radius:4px;white-space:nowrap;display:none;transform:translate(-50%,-115%)}
+.note{font-size:12px;color:var(--ink3);margin-top:6px}
+.trust{display:flex;gap:12px;align-items:flex-start;font-size:13.5px;color:var(--ink2)}
+.trust svg{flex:none;margin-top:2px}
+.trust p{margin:0 0 8px}
+.trust button{border:0;background:none;color:var(--accent);cursor:pointer;padding:0;font-size:13px}
+.trust .nums{display:flex;gap:28px;margin:4px 0 10px}
+.trust .nums div{font-size:12px;color:var(--ink3)}
+.trust .nums b{display:block;font-size:19px;color:var(--ink);font-weight:600}
+
+/* ---------- workspace ---------- */
+.shell{display:grid;grid-template-columns:272px minmax(0,1fr);min-height:calc(100vh - 58px)}
+aside.side{border-right:1px solid var(--rule);background:var(--surface);display:flex;flex-direction:column;min-height:0;position:sticky;top:58px;height:calc(100vh - 58px)}
+.side-h{padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:baseline}
+.side-h h2{font:600 15px/1.3 var(--serif);margin:0}.side-h span{color:var(--ink3);font-size:12px}
+.treefind{margin:0 16px 8px;border:1px solid var(--rule2);border-radius:6px;padding:6px 10px;background:var(--surface)}
+.tree{overflow:auto;flex:1;padding:0 8px 16px}
+.tree ul{list-style:none;margin:0;padding:0 0 0 14px}.tree>ul{padding:0}
+.node{display:grid;grid-template-columns:14px 10px 1fr auto;align-items:center;gap:4px;width:100%;border:0;background:none;text-align:left;padding:4px 8px 4px 2px;border-radius:5px;cursor:pointer}
+.node:hover{background:var(--hover)}
+.node[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.node .tw{color:var(--ink3);font-size:9px;text-align:center}
+.node .sw{width:8px;height:8px;border-radius:2px}
+.node .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.node .n{color:var(--ink3);font-size:12px;font-weight:400;padding-left:8px}
+.node .chg{font-size:11px;color:#8A5A00;margin-left:6px;font-weight:400}
+
+main{min-width:0;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:12px;padding:14px 28px;flex-wrap:wrap;border-bottom:1px solid var(--rule)}
+.scope{display:flex;align-items:center;gap:2px;flex-wrap:wrap;font-size:15px}
+.scope button{border:0;background:none;padding:2px 5px;border-radius:4px;cursor:pointer;color:var(--accent)}
+.scope button:hover{background:var(--accent-soft)}
+.scope .sep{color:var(--ink3);padding:0 2px}
+.scope .cur{font:600 16px var(--serif);padding:2px 5px}
+.scope .cnt{color:var(--ink3);font-size:13px;margin-left:6px}
+.scope .clear{color:var(--ink2);border:1px solid var(--rule2);margin-left:8px;font-size:12px;padding:2px 8px}
+.tabs{margin-left:auto;display:flex;gap:4px}
+.tabs button{border:0;background:none;padding:7px 14px;cursor:pointer;color:var(--ink2);border-radius:6px}
+.tabs button:hover{background:var(--hover)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+
+.view{display:none;flex-direction:column;flex:1;min-height:0}
+.view.on{display:flex}
+.tools{display:flex;gap:10px;padding:16px 28px 10px;align-items:center;flex-wrap:wrap}
+.tools input[type=search]{flex:1;max-width:440px;border:1px solid var(--rule2);border-radius:6px;padding:8px 12px;background:var(--surface)}
+.tools select{border:1px solid var(--rule2);border-radius:6px;padding:7px 10px;background:var(--surface)}
+.tools .hint{color:var(--ink3);font-size:12px;margin-left:auto}
+kbd{font:11px var(--sans);border:1px solid var(--rule2);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--surface);color:var(--ink2)}
+.fresh{margin:0 28px 10px;padding:9px 14px;border-radius:6px;background:var(--accent-soft);color:var(--accent);border:0;text-align:left;cursor:pointer;display:none}
+.fresh.on{display:block}
+.tablewrap{padding:0 28px 28px}
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+tbody tr:last-child td{border-bottom:0}
+th{font-weight:500;color:var(--ink3);font-size:12px;background:#FAFBFC}
+td.num{color:var(--ink3);text-align:right}
+td .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:8px;vertical-align:1px}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--hover)}
+tbody tr[aria-selected="true"]{background:var(--accent-soft)}
+.muted{color:var(--ink3)}
+.more{display:block;margin:14px auto 0;border:1px solid var(--rule2);background:var(--surface);border-radius:6px;padding:7px 18px;cursor:pointer}
+.empty{padding:40px 4px;color:var(--ink2);max-width:560px}
+.empty b{color:var(--ink);display:block;margin-bottom:6px;font-weight:600}
+.empty code{background:var(--hover);padding:1px 6px;border-radius:4px;font-size:12px}
+
+/* star plate */
+.plate{height:560px;margin:0 28px 28px;position:relative;background:var(--plate);border-radius:8px;overflow:hidden}
+.plate canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+.plate .cap{position:absolute;left:16px;bottom:12px;color:var(--plate-ink);font-size:12px;opacity:.8;pointer-events:none}
+.plate .tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border-radius:5px;padding:6px 9px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.3);display:none;white-space:nowrap}
+
+/* attrs */
+.attrs{padding:4px 28px 28px}
+.attrs .lead{color:var(--ink2);font-size:13px;margin:6px 0 14px;max-width:72ch}
+.attrs td{white-space:normal}
+.cov{display:inline-block;height:6px;background:var(--accent);border-radius:3px;vertical-align:middle;margin-right:8px}
+.kinds span{display:inline-block;margin-right:8px;color:var(--ink2)}
+.kinds span.drift{color:#8A5A00;font-weight:600}
+
+/* log */
+.log{padding:8px 28px 28px;display:grid;grid-template-columns:1fr 1fr;gap:36px;align-content:start}
+.log h3{font:600 15px/1.3 var(--serif);margin:6px 0 10px}
+.log ol{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--rule);border-radius:8px}
+.log li{padding:10px 14px;border-bottom:1px solid var(--rule);font-size:13px}.log li:last-child{border-bottom:0}
+.log .rev{color:var(--ink3);display:inline-block;min-width:92px}
+.log .why{color:#9A2B22}
+
+/* drawer */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--surface);border-left:1px solid var(--rule);transform:translateX(100%);visibility:hidden;transition:transform .18s ease-out,visibility 0s .18s;display:flex;flex-direction:column;z-index:10}
+.drawer.on{transform:none;visibility:visible;transition:transform .18s ease-out;box-shadow:-10px 0 30px rgba(20,25,34,.10)}
+.dh{padding:20px 22px 14px;border-bottom:1px solid var(--rule);position:relative}
+.dh h2{font:600 20px/1.3 var(--serif);margin:0 0 6px;padding-right:36px}
+.dh .x{position:absolute;top:16px;right:14px;border:0;background:none;font-size:22px;cursor:pointer;color:var(--ink3);width:34px;height:34px;border-radius:6px}
+.dh .x:hover{background:var(--hover)}
+.db{overflow:auto;flex:1;padding:6px 22px 22px}
+.kv{display:grid;grid-template-columns:150px 1fr;column-gap:14px;font-size:13px;margin:0}
+.kv dt{color:var(--ink3);padding:7px 0;border-bottom:1px solid var(--rule);overflow:hidden;text-overflow:ellipsis}
+.kv dd{margin:0;padding:7px 0;border-bottom:1px solid var(--rule);word-break:break-word}
+.db h3{font:600 14px/1.3 var(--serif);margin:20px 0 4px}
+details{margin-top:18px}summary{cursor:pointer;color:var(--accent);font-size:13px}
+pre{font:12px/1.5 ui-monospace,Menlo,monospace;background:var(--paper);padding:12px;border-radius:6px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+
+@media (max-width:980px){
+  .home{grid-template-columns:1fr;height:auto}.side-col{grid-template-rows:auto auto}.chart{min-height:160px}.big{font-size:42px}.hero .facts{margin-left:0}
+  .shell{grid-template-columns:1fr}aside.side{position:static;max-height:300px;border-right:0;border-bottom:1px solid var(--rule)}
+  .log{grid-template-columns:1fr}.tabs{margin-left:0}.tools .hint{display:none}
+  .top{height:auto;flex-wrap:wrap;padding:10px 16px;gap:10px}.nav{height:40px}.top .run{margin-left:0}.top select{min-width:0}
+}
 </style>
 </head>
 <body>
-<header>
-  <h1><span class="live" id="live"></span>宇宙万物观测站</h1>
-  <label class="muted">观测批次 <select id="run"></select></label>
-  <span class="muted" id="status"></span>
+<header class="top">
+  <h1>宇宙万物观测站</h1>
+  <nav class="nav" aria-label="页面"><a href="#/" data-p="home">总览</a><a href="#/explore" data-p="explore">浏览</a></nav>
+  <span class="status"><span class="dot" id="dot"></span><span id="conn">正在连接</span></span>
+  <label class="run">观测批次 <select id="run"></select></label>
 </header>
-<section class="kpis" id="kpis"></section>
-<main>
-  <div class="panel"><h2>分类树 <span id="treeRev" class="muted"></span></h2><div class="scroll tree" id="tree"></div></div>
-  <div class="split">
-    <div class="panel" style="flex:0 0 150px"><h2>实时接收速率（对象/秒，近 5 分钟）<span id="rateNow"></span></h2><canvas id="rate" height="110"></canvas></div>
-    <div class="panel" style="flex:1">
-      <h2><span class="tabs"><button data-t="list" class="on">对象</button><button data-t="map">星图</button><button data-t="attrs">属性探索</button></span><span id="scope" class="muted"></span></h2>
-      <div id="t-list" class="scroll" style="display:flex;flex-direction:column">
-        <div class="tool"><input id="q" placeholder="按名称或 ID 搜索，例如：恒星 / 飞机 / run-001-42"><select id="frame"><option value="">全部坐标系</option></select><button class="b" id="go">搜索</button></div>
-        <div class="scroll"><table><thead><tr><th>名称</th><th>类型</th><th>坐标系</th><th>位置</th><th>时间</th><th>#</th></tr></thead><tbody id="rows"></tbody></table>
-        <div style="padding:8px;text-align:center"><button class="b" id="more" style="display:none">加载更多</button></div></div>
-      </div>
-      <div id="t-map" style="display:none;flex:1;flex-direction:column;min-height:0">
-        <div class="tool"><select id="mapFrame"><option value="galactic">银河坐标 (ly)</option><option value="stellar_system">恒星系 </option><option value="local_surface">地表 (m)</option></select><span class="muted" id="mapInfo" style="align-self:center"></span></div>
-        <canvas id="map" style="flex:1;min-height:0"></canvas><div class="legend" id="legend"></div>
-      </div>
-      <div id="t-attrs" class="scroll" style="display:none"></div>
+
+<section class="page home" id="page-home" aria-label="总览">
+  <div class="hero">
+    <div class="headline"><div class="lbl">已入库对象</div><span class="big" id="big">–</span><div class="say" id="say"></div></div>
+    <div class="facts" id="facts"></div>
+    <button class="go" id="goExplore">浏览全部对象</button>
+  </div>
+  <div class="card">
+    <h2>世界由什么构成 <span>按大类统计，点击一类即可进入浏览</span></h2>
+    <div class="band" id="band"></div>
+    <div class="cats"><table><tbody id="cats"></tbody></table></div>
+  </div>
+  <div class="side-col">
+    <div class="card">
+      <h2>数据流入 <span id="flowSpan"></span></h2>
+      <div class="flowstats" id="flowStats"></div>
+      <div class="chart" id="chart"><svg id="svg" aria-label="每秒入库对象数"></svg><div class="tt" id="tt"></div></div>
+      <div class="note" id="flowNote"></div>
     </div>
+    <div class="card"><h2>数据可信度</h2><div class="trust" id="trust"></div></div>
   </div>
-  <div class="split">
-    <div class="panel" style="flex:1"><h2>对象详情</h2><div id="crumb" class="crumb muted">点击任一对象查看</div><div class="scroll"><pre id="detail"></pre></div></div>
-    <div class="panel" style="flex:0 0 200px"><h2>世界在变化：分类树修订 / 拒收记录</h2><div class="scroll log" id="log"></div></div>
-  </div>
-</main>
+</section>
+
+<section class="page" id="page-explore" aria-label="浏览">
+<div class="shell">
+  <aside class="side" aria-label="分类树">
+    <div class="side-h"><h2>分类</h2><span id="treeRev"></span></div>
+    <input class="treefind" id="treeFind" type="search" placeholder="查找分类" aria-label="查找分类">
+    <nav class="tree" id="tree"></nav>
+  </aside>
+  <main>
+    <div class="bar">
+      <div class="scope" id="scope"></div>
+      <div class="tabs" role="tablist">
+        <button role="tab" data-v="list" aria-selected="true">对象</button>
+        <button role="tab" data-v="map" aria-selected="false">星图</button>
+        <button role="tab" data-v="attrs" aria-selected="false">字段结构</button>
+        <button role="tab" data-v="log" aria-selected="false">变化记录</button>
+      </div>
+    </div>
+
+    <section class="view on" id="v-list">
+      <div class="tools">
+        <input id="q" type="search" placeholder="搜索名称或 ID" aria-label="搜索对象">
+        <select id="frame" aria-label="坐标系"><option value="">所有坐标系</option></select>
+        <span class="hint"><kbd>/</kbd> 搜索　<kbd>↑</kbd><kbd>↓</kbd> 选择　<kbd>Enter</kbd> 打开　<kbd>Esc</kbd> 关闭</span>
+      </div>
+      <button class="fresh" id="fresh"></button>
+      <div class="tablewrap">
+        <table><thead><tr><th>名称</th><th>分类</th><th>坐标系</th><th>位置</th><th>观测时间</th><th style="text-align:right">序号</th></tr></thead><tbody id="rows"></tbody></table>
+        <div id="listEmpty"></div>
+        <button class="more" id="more" hidden>加载更早的 100 个</button>
+      </div>
+    </section>
+
+    <section class="view" id="v-map">
+      <div class="tools">
+        <select id="mapFrame" aria-label="坐标系">
+          <option value="galactic">银河坐标（光年）</option>
+          <option value="stellar_system">恒星系坐标</option>
+          <option value="local_surface">地表坐标（米）</option>
+        </select>
+        <span class="hint">悬停查看对象，点击打开详情；颜色与上方构成光谱一致</span>
+      </div>
+      <div class="plate" id="plate"><canvas id="map" aria-label="对象位置星图"></canvas><div class="cap" id="mapCap"></div><div class="tip" id="tip"></div></div>
+    </section>
+
+    <section class="view" id="v-attrs"><div class="attrs" id="attrs"></div></section>
+    <section class="view" id="v-log"><div class="log" id="log"></div></section>
+  </main>
+</div>
+
+</section>
+
+<aside class="drawer" id="drawer" aria-label="对象详情" aria-hidden="true">
+  <div class="dh"><h2 id="dTitle"></h2><div class="scope" id="dPath"></div><button class="x" id="dClose" aria-label="关闭详情">×</button></div>
+  <div class="db" id="dBody"></div>
+</aside>
+
 <script>
-const $=s=>document.querySelector(s), fmt=n=>n==null?'–':Number(n).toLocaleString('zh-CN');
-const PAL=['#6aa8ff','#4cc38a','#f2b84b','#ef6b6b','#b48cff','#4fd1d9','#ff8fc7','#c2d94c','#ff9f5a','#9aa5b8','#7ee0a8','#e0c27e'];
-let S={tid:'',type:null,typeName:'全部',tab:'list',before:null,open:new Set([1]),tree:null};
-async function j(u){const r=await fetch(u);if(!r.ok)throw new Error(await r.text());return r.json()}
-const qp=o=>Object.entries(o).filter(([k,v])=>v!==null&&v!==''&&v!==undefined).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+const $=s=>document.querySelector(s);
+const fmt=n=>n==null?'–':Number(n).toLocaleString('zh-CN');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const qp=o=>Object.entries(o).filter(([,v])=>v!==null&&v!==''&&v!==undefined).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+async function j(u){const r=await fetch(u);if(!r.ok){let m=r.statusText;try{m=(await r.json()).error||m}catch(e){}throw new Error(m)}return r.json()}
+const hhmm=t=>new Date(t*1000).toLocaleTimeString('zh-CN',{hour12:false});
+const frameName=f=>({galactic:'银河坐标',stellar_system:'恒星系坐标',local_surface:'地表坐标',none:'无位置'}[f]||f);
 
-async function loadRuns(){const runs=await j('/api/runs');const sel=$('#run');const cur=S.tid;
-  sel.innerHTML=runs.map(r=>`<option value="${r.test_id}">${r.test_id} · ${fmt(r.objects)} 个对象</option>`).join('')||'<option value="">（等待数据）</option>';
-  if(!cur&&runs[0])S.tid=runs[0].test_id; sel.value=S.tid;}
-$('#run').onchange=e=>{S.tid=e.target.value;S.type=null;S.typeName='全部';refreshAll()};
+/* Category colour follows the entity: top-level categories sorted by type_id get slots 1..7 in fixed order; the rest are "其他". */
+const SLOTS=['--c1','--c2','--c3','--c4','--c5','--c6','--c7'];
+const PLATE=['#3987e5','#d95926','#199e70','#c98500','#d55181','#2fa52f','#9085e9'];
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+let CAT=new Map(); // top-level id -> {slot, name}
+function colorOf(topId,plate){const c=CAT.get(topId);if(!c||c.slot<0)return plate?'#7D8A9C':css('--c-other');return plate?PLATE[c.slot]:css(SLOTS[c.slot])}
 
-async function overview(){const o=await j('/api/overview?'+qp({test_id:S.tid}));const r=o.run||{};const m=o.server.metrics||{};
-  const k=[['对象总数',fmt(r.objects)],['接收批次',fmt(r.batches)],['近 10 秒速率',fmt(Math.round(o.rate_10s))+' /s'],['已去重批次',fmt(r.dup_batches)],
-   ['拒收坏批次',fmt(r.rejected)],['分类树修订',fmt(r.tree_revision)],['类型数',fmt(o.server.types_known)],['平均提交耗时',o.server.commit_ms_avg==null?'–':o.server.commit_ms_avg+' ms']];
-  $('#kpis').innerHTML=k.map(([a,b])=>`<div class="kpi"><b>${b}</b><span>${a}</span></div>`).join('');
-  $('#status').textContent='写入队列 '+o.server.queue+' · 每 2 秒刷新';
-  const fs=$('#frame');if(fs.options.length<=1)Object.keys(o.frames).forEach(f=>fs.add(new Option(f+' ('+fmt(o.frames[f])+')',f)));}
+const S={tid:'',type:null,view:'list',before:null,sel:-1,open:new Set([1]),tree:null,nodes:new Map(),mapPts:[],seen:null,treeFilter:''};
 
-async function rate(){const d=await j('/api/rate?'+qp({test_id:S.tid,seconds:300}));const c=$('#rate'),x=c.getContext('2d');
-  const W=c.width=c.clientWidth*devicePixelRatio,H=c.height=110*devicePixelRatio;x.clearRect(0,0,W,H);
-  const now=Math.floor(Date.now()/1000),m=new Map(d.points.map(p=>[p[0],p[1]]));const vals=[];for(let s=now-299;s<=now;s++)vals.push(m.get(s)||0);
-  const mx=Math.max(10,...vals);x.strokeStyle='#232c3f';x.fillStyle='#8592a8';x.font=10*devicePixelRatio+'px sans-serif';
-  [0,.5,1].forEach(f=>{const y=H-4-(H-16)*f;x.beginPath();x.moveTo(0,y);x.lineTo(W,y);x.stroke();x.fillText(fmt(Math.round(mx*f)),4,y-3)});
-  x.beginPath();vals.forEach((v,i)=>{const X=i/(vals.length-1)*W,Y=H-4-(H-16)*v/mx;i?x.lineTo(X,Y):x.moveTo(X,Y)});x.strokeStyle='#6aa8ff';x.lineWidth=1.5*devicePixelRatio;x.stroke();
-  $('#rateNow').textContent='峰值 '+fmt(Math.max(...vals))+' /s';$('#live').style.background=vals.slice(-5).some(v=>v>0)?'#4cc38a':'#8592a8';}
+/* ---------- runs ---------- */
+async function loadRuns(){
+  const runs=await j('/api/runs');const sel=$('#run');
+  sel.innerHTML=runs.length?runs.map(r=>`<option value="${esc(r.test_id)}">${esc(r.test_id)}（${fmt(r.objects)} 个对象）</option>`).join(''):'<option value="">暂无数据</option>';
+  if(!S.tid&&runs[0])S.tid=runs[0].test_id;sel.value=S.tid;return runs.find(r=>r.test_id===S.tid);
+}
+$('#run').onchange=e=>{S.tid=e.target.value;S.type=null;S.seen=null;closeDrawer();refreshAll()};
 
-function renderTree(n,depth=0){const has=n.children.length,open=S.open.has(n.id);
-  return `<li><div class="node ${S.type===n.id?'sel':''}" data-id="${n.id}" data-name="${esc(n.name)}"><span><span class="tog" data-tog="${n.id}">${has?(open?'▾':'▸'):''}</span>${esc(n.name)}</span><span class="c">${fmt(n.total)}</span></div>
-  ${has&&open?'<ul>'+n.children.map(c=>renderTree(c,depth+1)).join('')+'</ul>':''}</li>`}
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function tree(){const t=await j('/api/tree?'+qp({test_id:S.tid}));S.tree=t;$('#treeRev').textContent='修订 '+t.revision;
-  $('#tree').innerHTML='<ul>'+t.roots.map(r=>renderTree(r)).join('')+'</ul>';
-  const lg=await j('/api/rejections?'+qp({test_id:S.tid}));
-  $('#log').innerHTML=t.changes.map(c=>`<div>修订 ${c[0]} · <b>${c[1]==='move'?'迁移':'重命名'}</b> #${c[2]} → ${esc(c[4])} <span class="muted">(父 ${c[3]})</span></div>`).join('')+
-   lg.items.map(r=>`<div style="color:var(--bad)">拒收 batch ${r[2]} · ${esc(r[3])} <span class="muted">${new Date(r[0]*1000).toLocaleTimeString()}</span></div>`).join('')||'<div class="muted">暂无</div>';}
-$('#tree').onclick=e=>{const tg=e.target.closest('[data-tog]');if(tg){const id=+tg.dataset.tog;S.open.has(id)?S.open.delete(id):S.open.add(id);tree();return}
-  const n=e.target.closest('.node');if(!n)return;const id=+n.dataset.id;S.type=S.type===id?null:id;S.typeName=S.type?n.dataset.name:'全部';S.open.add(id);tree();reloadTab()};
+/* ---------- overview ---------- */
+let lastOv=null;
+async function overview(){
+  const [o,r]=await Promise.all([j('/api/overview?'+qp({test_id:S.tid})),j('/api/rate?'+qp({test_id:S.tid,whole:1,points:240}))]);
+  lastOv=o;const run=o.run||{};
+  $('#big').textContent=fmt(run.objects);
+  const tops=S.tree?S.tree.roots.flatMap(r=>r.children).length:0;
+  $('#say').textContent=run.objects?`分布在 ${tops} 个大类、${fmt(o.server.types_known)} 个分类中`:'启动一轮发生器后，这里会实时更新';
+  $('#facts').innerHTML=`<div><b>${fmt(run.batches)}</b>入库批次</div><div><b>${fmt(o.server.types_known)}</b>分类</div><div><b>${fmt(run.tree_revision)}</b>分类树修订</div><div><b>${fmt(Math.round(o.rate_10s))}</b>当前每秒入库</div>`;
+  const live=o.rate_10s>0;
+  $('#dot').className='dot '+(live?'on':'');
+  $('#conn').textContent=live?`正在接收，每秒约 ${fmt(Math.round(o.rate_10s))} 个对象`:(run.objects?`空闲，最后一次写入于 ${hhmm(run.last_seen)}`:'等待第一批数据');
+  drawFlow(r,live,o);
+  $('#trust').innerHTML=run.objects||run.rejected?`<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="9" fill="#1E7A46"/><path d="M5 9.2l2.6 2.6L13 6.4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><div class="nums"><div><b>${fmt(run.batches)}</b>校验后入库的批次</div><div><b>${fmt(run.dup_batches)}</b>重复投递已去重</div><div><b>${fmt(run.rejected)}</b>坏批次已整批拦截</div></div>
+    <p>每一批都在写入磁盘后才向发生器确认。含缺字段或格式错误对象的批次整批拒收，不会有半批数据进入系统。</p><button id="toLog">查看拦截原因</button></div>`:'<p>收到数据后，这里会说明有多少批被去重、多少批因格式错误被拦截。</p>';
+  const tl=$('#toLog');if(tl)tl.onclick=()=>{go('explore');switchView('log')};
+  const fs=$('#frame');if(fs.options.length<=1)Object.entries(o.frames).forEach(([f,n])=>fs.add(new Option(frameName(f)+'（'+fmt(n)+'）',f)));
+  if(S.seen==null)S.seen=run.objects||0;
+  const fresh=(run.objects||0)-S.seen;const b=$('#fresh');b.classList.toggle('on',fresh>0&&S.view==='list');b.textContent=`又有 ${fmt(fresh)} 个新对象入库，点此刷新列表`;
+}
 
-async function list(append){const d=await j('/api/objects?'+qp({test_id:S.tid,type_id:S.type,q:$('#q').value.trim(),frame_kind:$('#frame').value,before_seq:append?S.before:null,limit:100}));
-  const h=d.items.map(o=>`<tr data-id="${esc(o.id)}"><td>${esc(o.name)}</td><td>${esc(o.type_name)}</td><td>${o.frame_kind||''}</td><td>${o.x==null?'—':[o.x,o.y,o.z].map(v=>Math.round(v)).join(', ')}</td><td>${new Date(o.ts).toLocaleTimeString()}</td><td class="muted">${o.seq}</td></tr>`).join('');
-  $('#rows').innerHTML=append?$('#rows').innerHTML+h:h;S.before=d.next_before_seq;$('#more').style.display=S.before==null?'none':'';}
-$('#go').onclick=()=>list(false);$('#q').onkeydown=e=>{if(e.key==='Enter')list(false)};$('#frame').onchange=()=>list(false);$('#more').onclick=()=>list(true);
-$('#rows').onclick=async e=>{const tr=e.target.closest('tr');if(!tr)return;showObj(tr.dataset.id)};
-async function showObj(id){const d=await j('/api/object?'+qp({test_id:S.tid,id}));$('#crumb').textContent=d.type_path.map(p=>p.name).join(' / ')+'  ·  batch '+d.batch_id;$('#detail').textContent=JSON.stringify(d.object,null,2);}
+/* area chart: objects stored per second across the whole run */
+let FLOW=null;
+function drawFlow(r,live,o){
+  const pts=r.points;FLOW={pts,bucket:r.bucket};
+  const vals=pts.map(p=>p[1]);const peak=Math.max(0,...vals);const active=vals.filter(v=>v>0);
+  const avg=active.length?active.reduce((a,b)=>a+b,0)/active.length:0;
+  const dur=r.start!=null?(r.end-r.start+1):0;
+  $('#flowSpan').textContent=r.start!=null?`${hhmm(r.start)} – ${hhmm(r.end)}，共 ${dur>=120?Math.round(dur/60)+' 分钟':dur+' 秒'}`:'';
+  $('#flowStats').innerHTML=`<div><b>${fmt(Math.round(o.rate_10s))}</b>当前（个/秒）</div><div><b>${fmt(Math.round(peak))}</b>峰值（个/秒）</div><div><b>${fmt(Math.round(avg))}</b>流入时平均（个/秒）</div>`;
+  $('#flowNote').textContent=live?'曲线实时更新：纵轴为每秒入库对象数，横轴为时间。':(pts.length?'当前没有数据流入。曲线为本批次全程的入库速率，悬停可看每个时刻的数值。':'还没有数据。');
+  const svg=$('#svg');if(!svg.clientWidth)return;const W=svg.clientWidth,H=svg.clientHeight||140;const L=44,R=8,T=8,B=22;
+  if(!pts.length){svg.innerHTML='';return}
+  const mx=niceMax(peak||1);const x=i=>L+(pts.length<2?0:i/(pts.length-1))*(W-L-R),y=v=>T+(1-v/mx)*(H-T-B);
+  let d=`M${x(0)},${y(pts[0][1])}`;pts.forEach((p,i)=>{if(i)d+=`L${x(i)},${y(p[1])}`});
+  const area=d+`L${x(pts.length-1)},${y(0)}L${x(0)},${y(0)}Z`;
+  const ticks=[0,mx/2,mx];const xt=[0,Math.floor((pts.length-1)/2),pts.length-1];
+  svg.innerHTML=`${ticks.map(t=>`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="#E2E5EA"/><text x="${L-8}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="#7A8293">${fmtShort(t)}</text>`).join('')}
+    ${xt.map(i=>`<text x="${x(i)}" y="${H-6}" text-anchor="${i===0?'start':i===pts.length-1?'end':'middle'}" font-size="11" fill="#7A8293">${hhmm(pts[i][0])}</text>`).join('')}
+    <path d="${area}" fill="#2a78d6" fill-opacity=".12"/><path d="${d}" fill="none" stroke="#1C5CAB" stroke-width="2" stroke-linejoin="round"/>
+    <line id="xh" y1="${T}" y2="${H-B}" stroke="#141922" stroke-opacity=".35" visibility="hidden"/><circle id="xc" r="4" fill="#1C5CAB" stroke="#fff" stroke-width="2" visibility="hidden"/>
+    <rect x="${L}" y="${T}" width="${W-L-R}" height="${H-T-B}" fill="transparent" id="hit"/>`;
+  const hit=$('#hit'),tt=$('#tt');
+  hit.onmousemove=e=>{const bx=svg.getBoundingClientRect();const i=Math.max(0,Math.min(pts.length-1,Math.round((e.clientX-bx.left-L)/(W-L-R)*(pts.length-1))));
+    const X=x(i),Y=y(pts[i][1]);$('#xh').setAttribute('x1',X);$('#xh').setAttribute('x2',X);$('#xh').setAttribute('visibility','visible');
+    $('#xc').setAttribute('cx',X);$('#xc').setAttribute('cy',Y);$('#xc').setAttribute('visibility','visible');
+    tt.style.display='block';tt.style.left=X+'px';tt.style.top=Y+'px';tt.textContent=`${hhmm(pts[i][0])}　每秒 ${fmt(Math.round(pts[i][1]))} 个`};
+  hit.onmouseleave=()=>{tt.style.display='none';$('#xh').setAttribute('visibility','hidden');$('#xc').setAttribute('visibility','hidden')};
+}
+function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v)));for(const m of [1,2,2.5,5,10])if(m*p>=v)return m*p;return 10*p}
+function fmtShort(v){return v>=10000?(v/10000).toFixed(v%10000?1:0)+' 万':fmt(Math.round(v))}
 
-async function map(){const fk=$('#mapFrame').value;const d=await j('/api/map?'+qp({test_id:S.tid,frame_kind:fk,limit:8000}));const c=$('#map'),x=c.getContext('2d');
-  const W=c.width=c.clientWidth*devicePixelRatio,H=c.height=c.clientHeight*devicePixelRatio;x.fillStyle='#070a10';x.fillRect(0,0,W,H);
-  const pts=d.points;if(!pts.length){$('#mapInfo').textContent='该坐标系暂无对象';return}
-  let xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const q=(a,f)=>{const s=[...a].sort((m,n)=>m-n);return s[Math.floor(f*(s.length-1))]};
-  const x0=q(xs,.01),x1=q(xs,.99),y0=q(ys,.01),y1=q(ys,.99);const cats=Object.keys(d.categories),col=t=>PAL[cats.indexOf(String(t))%PAL.length];
-  S.mapPts=[];for(const p of pts){const X=(p[0]-x0)/(x1-x0||1)*(W-20)+10,Y=H-((p[1]-y0)/(y1-y0||1)*(H-20)+10);x.fillStyle=col(p[2]);x.globalAlpha=.75;x.fillRect(X,Y,2*devicePixelRatio,2*devicePixelRatio);S.mapPts.push([X,Y,p[3]])}
-  x.globalAlpha=1;$('#legend').innerHTML=cats.map(t=>`<span><i style="background:${col(t)}"></i>${esc(d.categories[t])}</span>`).join('');
-  $('#mapInfo').textContent=`最近 ${fmt(pts.length)} 个对象 · 点击光点查看详情`;}
+/* composition spectrum */
+function renderSpectrum(){
+  if(!S.tree)return;const root=S.tree.roots[0];const total=root?root.total:0;if(!total){$('#band').innerHTML='';$('#cats').innerHTML='';return}
+  const tops=S.tree.roots.flatMap(r=>r.children).filter(p=>p.total>0).sort((a,b)=>b.total-a.total);
+  const main=tops.filter(p=>CAT.get(p.id)&&CAT.get(p.id).slot>=0);
+  const rest=tops.filter(p=>!(CAT.get(p.id)&&CAT.get(p.id).slot>=0));
+  const restN=rest.reduce((a,p)=>a+p.total,0)+(root.own||0);
+  const restNames=rest.map(p=>p.name).concat(root.own?['仅标为“万物”']:[]);
+  const parts=main.map(p=>({id:p.id,name:p.name,total:p.total,color:colorOf(p.id)}));
+  if(restN)parts.push({id:'',name:'其他',total:restN,color:css('--c-other'),note:restNames.join('、')});
+  const curTop=S.type?topOf(S.type):null;const pc=v=>{const r=v/total*100;return (r<10?r.toFixed(1):Math.round(r))+'%'};
+  $('#band').innerHTML=parts.map(p=>`<button style="flex:${p.total};background:${p.color}" data-id="${p.id}" title="${esc(p.name)}${p.note?'（'+esc(p.note)+'）':''}：${fmt(p.total)} 个，${pc(p.total)}"></button>`).join('');
+  const mx=Math.max(...parts.map(p=>p.total));
+  $('#cats').innerHTML=parts.map(p=>`<tr data-id="${p.id}" class="${p.id===''?'other':''}"><td><span class="nm"><i style="background:${p.color}"></i><span>${esc(p.name)}${p.note?`<div class="note">${esc(p.note)}</div>`:''}</span></span></td>
+    <td class="share"><span style="width:${p.total/mx*100}%;background:${p.color}"></span></td><td class="r">${fmt(p.total)}</td><td class="pc">${pc(p.total)}</td></tr>`).join('');
+}
+$('#band').onclick=$('#cats').onclick=e=>{const b=e.target.closest('[data-id]');if(!b||b.dataset.id==='')return;go('explore');setType(+b.dataset.id)};
+$('#goExplore').onclick=()=>{go('explore');setType(null)};
+function go(p){if(location.hash!==(p==='explore'?'#/explore':'#/'))location.hash=p==='explore'?'#/explore':'#/';route()}
+function route(){const p=location.hash.startsWith('#/explore')?'explore':'home';
+  document.querySelectorAll('.page').forEach(el=>el.classList.toggle('on',el.id==='page-'+p));
+  document.querySelectorAll('.nav a').forEach(a=>a.setAttribute('aria-current',a.dataset.p===p?'page':'false'));
+  S.page=p;window.scrollTo(0,0);if(p==='home'&&lastOv&&FLOW)overview();if(p==='explore'&&S.tid)reloadView()}
+window.addEventListener('hashchange',route);
+
+/* ---------- tree ---------- */
+function topOf(id){let n=S.nodes.get(id);while(n&&n.parentNode&&n.parentNode.parentNode)n=n.parentNode;return n&&n.parentNode?n.id:null}
+async function tree(){
+  const t=await j('/api/tree?'+qp({test_id:S.tid}));S.tree=t;S.nodes.clear();
+  const changed=new Set(t.changes.map(c=>c[2]));
+  (function walk(ns,parent){for(const n of ns){n.parentNode=parent;n.changed=changed.has(n.id);S.nodes.set(n.id,n);walk(n.children,n)}})(t.roots,null);
+  const tops=t.roots.flatMap(r=>r.children).map(n=>n.id).sort((a,b)=>a-b);
+  const bySize=t.roots.flatMap(r=>r.children).sort((a,b)=>b.total-a.total).map(n=>n.id);
+  // the 7 largest categories get colours; slot order follows type_id so a colour never jumps when sizes change
+  const coloured=new Set(bySize.slice(0,7));let k=0;CAT=new Map();
+  for(const id of tops){CAT.set(id,{slot:coloured.has(id)?k++:-1})}
+  $('#treeRev').textContent=t.revision?'第 '+t.revision+' 次修订':'';
+  renderTree();renderScope();renderSpectrum();
+}
+function matches(n,f){return !f||n.name.toLowerCase().includes(f)||n.children.some(c=>matches(c,f))}
+function renderTree(){
+  const f=S.treeFilter.toLowerCase();
+  const li=(n,depth)=>{if(!matches(n,f))return'';const has=n.children.length,open=f||S.open.has(n.id);
+    const sw=depth===1?`<span class="sw" style="background:${colorOf(n.id)}"></span>`:'<span></span>';
+    return `<li><button class="node" data-id="${n.id}" aria-current="${S.type===n.id}" ${has?`aria-expanded="${!!open}"`:''}>
+      <span class="tw" data-tog="${n.id}">${has?(open?'▼':'▶'):''}</span>${sw}<span class="nm">${esc(n.name)}${n.changed?'<span class="chg">已变更</span>':''}</span><span class="n">${fmt(n.total)}</span></button>
+      ${has&&open?'<ul>'+n.children.map(c=>li(c,depth+1)).join('')+'</ul>':''}</li>`};
+  $('#tree').innerHTML=S.tree&&S.tree.roots.length?'<ul>'+S.tree.roots.map(r=>li(r,0)).join('')+'</ul>':'<div class="empty" style="padding:16px">分类树会在第一次分类修订到达后出现。</div>';
+}
+$('#tree').onclick=e=>{const n=e.target.closest('.node');if(!n)return;const id=+n.dataset.id;
+  if(e.target.closest('[data-tog]')&&S.nodes.get(id).children.length){S.open.has(id)?S.open.delete(id):S.open.add(id);renderTree();return}
+  setType(S.type===id?null:id)};
+$('#treeFind').oninput=e=>{S.treeFilter=e.target.value.trim();renderTree()};
+function setType(id){S.type=id;let p=S.nodes.get(id);while(p){S.open.add(p.id);p=p.parentNode}renderTree();renderScope();renderSpectrum();reloadView()}
+function pathOf(id){const out=[];let p=S.nodes.get(id);while(p){out.unshift(p);p=p.parentNode}return out}
+function renderScope(){
+  const el=$('#scope');
+  if(!S.type){el.innerHTML=`<span class="cur">全部对象</span>`;return}
+  const p=pathOf(S.type);
+  el.innerHTML=p.map((n,i)=>i===p.length-1?`<span class="cur">${esc(n.name)}</span>`:`<button data-id="${n.id}">${esc(n.name)}</button><span class="sep">/</span>`).join('')+
+    `<span class="cnt">含子类共 ${fmt(p[p.length-1].total)} 个</span><button class="clear" data-id="">清除筛选</button>`;
+}
+$('#scope').onclick=e=>{const b=e.target.closest('button');if(b)setType(b.dataset.id?+b.dataset.id:null)};
+
+/* ---------- list ---------- */
+let qTimer;
+$('#q').oninput=()=>{clearTimeout(qTimer);qTimer=setTimeout(()=>list(false),250)};
+$('#frame').onchange=()=>list(false);$('#more').onclick=()=>list(true);$('#fresh').onclick=()=>list(false);
+async function list(append){
+  const d=await j('/api/objects?'+qp({test_id:S.tid,type_id:S.type,q:$('#q').value.trim(),frame_kind:$('#frame').value,before_seq:append?S.before:null,limit:100}));
+  if(!append){S.seen=null;$('#fresh').classList.remove('on');S.sel=-1}
+  const h=d.items.map(o=>`<tr data-id="${esc(o.id)}"><td>${esc(o.name)}</td><td><span class="sw" style="background:${colorOf(topOf(o.type_id))}"></span>${esc(o.type_name)}</td><td>${frameName(o.frame_kind||'none')}</td>
+    <td>${o.x==null?'<span class="muted">无</span>':[o.x,o.y,o.z].map(v=>fmt(Math.round(v))).join('，')}</td><td>${new Date(o.ts).toLocaleString('zh-CN',{hour12:false})}</td><td class="num">${o.seq}</td></tr>`).join('');
+  $('#rows').innerHTML=append?$('#rows').innerHTML+h:h;
+  S.before=d.next_before_seq;$('#more').hidden=S.before==null;
+  const n=$('#rows').children.length;
+  $('#listEmpty').innerHTML=n?'':(S.tid?`<div class="empty"><b>没有符合条件的对象</b>换个关键词，或点击上方的“清除筛选”。</div>`:
+    `<div class="empty"><b>还没有收到任何数据</b>启动一轮发生器后，对象会实时出现在这里：<br><code>scripts/start_run.sh run-001 2000 120</code></div>`);
+}
+$('#rows').onclick=e=>{const tr=e.target.closest('tr');if(!tr)return;selectRow([...$('#rows').children].indexOf(tr));openObj(tr.dataset.id)};
+function selectRow(i){const rows=$('#rows').children;if(!rows.length)return;S.sel=Math.max(0,Math.min(rows.length-1,i));
+  [...rows].forEach((r,k)=>r.setAttribute('aria-selected',k===S.sel));rows[S.sel].scrollIntoView({block:'nearest'})}
+
+/* ---------- drawer ---------- */
+function val(v){if(v===null)return'<span class="muted">空</span>';if(typeof v==='object')return`<code>${esc(JSON.stringify(v))}</code>`;return esc(v)}
+async function openObj(id){
+  try{
+    const d=await j('/api/object?'+qp({test_id:S.tid,id}));const o=d.object,p=o.position;
+    $('#dTitle').textContent=o.name;
+    $('#dPath').innerHTML=d.type_path.map((n,i)=>`<button data-id="${n.id}">${esc(n.name)}</button>${i<d.type_path.length-1?'<span class="sep">/</span>':''}`).join('');
+    const base=[['ID',o.id],['序号',o.sequence],['观测时间',new Date(o.timestamp_ms).toLocaleString('zh-CN',{hour12:false})],['所在批次',d.batch_id],
+      ['坐标系',p?`${frameName(p.frame_kind)}（${p.frame_id}）`:null],['位置',p?`x ${fmt(p.x)}，y ${fmt(p.y)}，z ${fmt(p.z)} ${p.unit||''}`:null]];
+    $('#dBody').innerHTML=`<dl class="kv">${base.map(([k,v])=>`<dt>${k}</dt><dd>${val(v)}</dd>`).join('')}</dl>
+      <h3>属性</h3><dl class="kv">${Object.entries(o.attributes).map(([k,v])=>`<dt title="${esc(k)}">${esc(k)}</dt><dd>${val(v)}</dd>`).join('')}</dl>
+      <details><summary>查看原始 JSON</summary><pre>${esc(JSON.stringify(o,null,2))}</pre></details>`;
+    $('#drawer').classList.add('on');$('#drawer').setAttribute('aria-hidden','false');
+  }catch(e){toastErr('打开对象失败：'+e.message)}
+}
+function closeDrawer(){$('#drawer').classList.remove('on');$('#drawer').setAttribute('aria-hidden','true')}
+$('#dClose').onclick=closeDrawer;
+$('#dPath').onclick=e=>{const b=e.target.closest('button');if(b){setType(+b.dataset.id);closeDrawer()}};
+
+/* ---------- map ---------- */
 $('#mapFrame').onchange=map;
-$('#map').onclick=e=>{const r=e.target.getBoundingClientRect(),X=(e.clientX-r.left)*devicePixelRatio,Y=(e.clientY-r.top)*devicePixelRatio;let b=null,bd=1e9;
-  for(const p of S.mapPts||[]){const dd=(p[0]-X)**2+(p[1]-Y)**2;if(dd<bd){bd=dd;b=p}}if(b&&bd<400)showObj(b[2])};
+async function map(){
+  const fk=$('#mapFrame').value;const d=await j('/api/map?'+qp({test_id:S.tid,frame_kind:fk,limit:8000}));
+  const c=$('#map'),x=c.getContext('2d'),dpr=devicePixelRatio||1;const W=c.width=c.clientWidth*dpr,H=c.height=c.clientHeight*dpr;
+  x.clearRect(0,0,W,H);x.strokeStyle='rgba(216,228,240,.07)';x.lineWidth=1;
+  for(let i=1;i<12;i++){x.beginPath();x.moveTo(W*i/12,0);x.lineTo(W*i/12,H);x.stroke()}for(let i=1;i<8;i++){x.beginPath();x.moveTo(0,H*i/8);x.lineTo(W,H*i/8);x.stroke()}
+  S.mapPts=[];
+  let pts=d.points;if(S.type){const ids=new Set();(function w(n){ids.add(n.id);n.children.forEach(w)})(S.nodes.get(S.type));pts=pts.filter(p=>ids.has(p[2]))}
+  if(!pts.length){$('#mapCap').textContent=S.type?'当前分类在这个坐标系里没有对象，换一个坐标系试试，或清除筛选':'这个坐标系里还没有对象';return}
+  const q=(a,f)=>{const s=[...a].sort((m,n)=>m-n);return s[Math.floor(f*(s.length-1))]};
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const x0=q(xs,.01),x1=q(xs,.99),y0=q(ys,.01),y1=q(ys,.99);
+  const pad=28*dpr,r=1.7*dpr;
+  for(const p of pts){const X=pad+(p[0]-x0)/((x1-x0)||1)*(W-2*pad),Y=H-pad-(p[1]-y0)/((y1-y0)||1)*(H-2*pad);
+    x.globalAlpha=.9;x.fillStyle=colorOf(topOf(p[2])??p[2],true);x.beginPath();x.arc(X,Y,r,0,7);x.fill();S.mapPts.push([X,Y,p[3],(S.nodes.get(p[2])||{}).name])}
+  x.globalAlpha=1;
+  $('#mapCap').textContent=`${frameName(fk)}：最近 ${fmt(pts.length)} 个对象的平面投影（x / y），两端各 1% 的离群点不在视野内`;
+}
+function nearest(e){const c=$('#map'),r=c.getBoundingClientRect(),dpr=devicePixelRatio||1,X=(e.clientX-r.left)*dpr,Y=(e.clientY-r.top)*dpr;
+  let b=null,bd=1e18;for(const p of S.mapPts){const dd=(p[0]-X)**2+(p[1]-Y)**2;if(dd<bd){bd=dd;b=p}}return bd<(10*dpr)**2?b:null}
+$('#map').onmousemove=e=>{const p=nearest(e),t=$('#tip');if(!p){t.style.display='none';return}
+  const r=$('#plate').getBoundingClientRect();t.style.display='block';t.style.left=(e.clientX-r.left+14)+'px';t.style.top=(e.clientY-r.top+14)+'px';t.textContent=`${p[2]}，${p[3]||''}`};
+$('#map').onmouseleave=()=>$('#tip').style.display='none';
+$('#map').onclick=e=>{const p=nearest(e);if(p)openObj(p[2])};
 
-async function attrs(){const d=await j('/api/attrs?'+qp({test_id:S.tid,type_id:S.type}));const mx=Math.max(1,...d.attributes.map(a=>a.count));
-  $('#t-attrs').innerHTML=`<div class="attr muted">基于最近 ${d.sampled} 个对象自动推断的属性结构（数据格式未预先给定）</div>`+d.attributes.map(a=>`<div class="attr"><span class="k">${esc(a.key)}</span>
-   <span class="m"> · 出现 ${a.count} 次 · ${Object.entries(a.kinds).map(([k,v])=>k+':'+v).join(' ')}${a.min!=null?` · 范围 ${a.min} ~ ${a.max}`:''}${a.top.length?' · 常见值 '+a.top.map(t=>esc(t[0])+'('+t[1]+')').join(', '):''}</span>
-   <div class="bar" style="width:${a.count/mx*100}%"></div></div>`).join('');}
+/* ---------- attrs ---------- */
+async function attrs(){
+  const d=await j('/api/attrs?'+qp({test_id:S.tid,type_id:S.type}));
+  if(!d.sampled){$('#attrs').innerHTML='<div class="empty"><b>这个分类下还没有对象</b>换一个分类，或等待数据入库。</div>';return}
+  $('#attrs').innerHTML=`<p class="lead">发生器没有提供数据格式。下表根据当前范围内最近 ${d.sampled} 个对象自动推断：每个字段出现的比例、值的类型、数值范围和常见取值。同一字段出现多种类型时标为橙色，说明格式在漂移。</p>
+  <table><thead><tr><th>字段</th><th>出现比例</th><th>值类型</th><th>范围或常见取值</th></tr></thead><tbody>${d.attributes.map(a=>{
+    const kinds=Object.keys(a.kinds).filter(k=>k!=='null');const drift=kinds.length>1;const pct=a.count/d.sampled;
+    return `<tr style="cursor:default"><td><b>${esc(a.key)}</b></td><td><span class="cov" style="width:${Math.max(2,pct*80)}px"></span>${Math.round(pct*100)}%</td>
+      <td class="kinds">${Object.entries(a.kinds).map(([k,v])=>`<span class="${drift&&k!=='null'?'drift':''}">${({str:'文本',int:'整数',float:'小数',bool:'布尔',list:'列表',dict:'对象',null:'空'})[k]||k} ${v}</span>`).join('')}</td>
+      <td>${a.min!=null?`${fmt(a.min)} ～ ${fmt(a.max)}`:''}${a.top.length?(a.min!=null?'；':'')+a.top.map(t=>esc(t[0])+'（'+t[1]+'）').join('、'):''}</td></tr>`}).join('')}</tbody></table>`;
+}
 
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));S.tab=b.dataset.t;
-  ['list','map','attrs'].forEach(t=>$('#t-'+t).style.display=t===S.tab?(t==='attrs'?'block':'flex'):'none');reloadTab()});
-function reloadTab(){$('#scope').textContent='范围：'+S.typeName+'（含子类）';if(S.tab==='list')list(false);else if(S.tab==='map')map();else attrs();}
-async function refreshAll(){await loadRuns();if(!S.tid)return;await Promise.all([overview(),rate(),tree()]);reloadTab();}
-async function tick(){try{await loadRuns();if(S.tid)await Promise.all([overview(),rate()])}catch(e){$('#status').textContent='连接中断，重试中…'}}
-refreshAll();setInterval(tick,2000);setInterval(()=>{if(S.tid)tree()},6000);
+/* ---------- log ---------- */
+const reason=s=>({'object type_id':'对象缺少分类，或分类不存在','object attributes':'属性不是对象结构','object sequence':'序号不合法','object id':'缺少对象 ID','object position':'位置格式错误','object position missing':'缺少位置字段','object too large':'单个对象超过 8 KB','object name':'缺少名称','object timestamp_ms':'时间戳不合法'})[s]||s;
+async function log(){
+  const [t,rj]=await Promise.all([j('/api/tree?'+qp({test_id:S.tid})),j('/api/rejections?'+qp({test_id:S.tid}))]);
+  $('#log').innerHTML=`<div><h3>分类树的改名与迁移</h3>${t.changes.length?'<ol>'+t.changes.map(c=>`<li><span class="rev">第 ${c[0]} 次修订</span>${c[1]==='move'?'迁移':'改名'}：${esc(c[4])}${c[1]==='move'&&S.nodes.get(c[3])?'，移到“'+esc(S.nodes.get(c[3]).name)+'”下':''}</li>`).join('')+'</ol>':'<p class="muted">还没有改名或迁移。</p>'}</div>
+   <div><h3>被拦截的批次</h3>${rj.items.length?'<ol>'+rj.items.map(r=>`<li><span class="rev">批次 ${r[2]??'?'}</span><span class="why">${esc(reason(r[3]))}</span><br><span class="muted" style="font-size:12px">${hhmm(r[0])}，整批未写入</span></li>`).join('')+'</ol>':'<p class="muted">没有被拦截的批次。</p>'}</div>`;
+}
+
+/* ---------- views, keys, refresh ---------- */
+function switchView(v){S.view=v;document.querySelectorAll('[role=tab]').forEach(x=>x.setAttribute('aria-selected',x.dataset.v===v));
+  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('on',el.id==='v-'+v));reloadView()}
+document.querySelectorAll('[role=tab]').forEach(b=>b.onclick=()=>switchView(b.dataset.v));
+function reloadView(){const f={list:()=>list(false),map,attrs,log}[S.view];f().catch(e=>toastErr(e.message))}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeDrawer();return}
+  if(e.target.matches('input,select'))return;
+  if(e.key==='/'){e.preventDefault();go('explore');switchView('list');$('#q').focus();return}
+  if(S.page!=='explore'||S.view!=='list')return;
+  if(e.key==='ArrowDown'){e.preventDefault();selectRow(S.sel+1)}
+  if(e.key==='ArrowUp'){e.preventDefault();selectRow(S.sel-1)}
+  if(e.key==='Enter'&&S.sel>=0)openObj($('#rows').children[S.sel].dataset.id);
+});
+window.addEventListener('resize',()=>{if(lastOv&&FLOW)overview()});
+function toastErr(m){$('#dot').className='dot err';$('#conn').textContent=m}
+async function refreshAll(){try{await loadRuns();if(!S.tid){list(false);renderTree();return}await tree();await overview();if(S.page==='explore')reloadView()}catch(e){toastErr('无法连接服务：'+e.message)}}
+async function tick(){try{await loadRuns();if(S.tid)await overview()}catch(e){toastErr('与服务的连接中断，正在重试')}}
+route();refreshAll();setInterval(tick,2000);
+setInterval(()=>{if(S.tid)tree().then(()=>{if(S.view==='log')log()}).catch(()=>{})},6000);
 </script>
 </body>
 </html>

@@ -4,7 +4,8 @@ services:
     image: cosmos-observatory:latest
     container_name: cosmos-observatory
     ports:
-      - "127.0.0.1:8000:8000"
+      # Web UI / API / ingest on host port 18000 (override with OBS_PORT=xxxx)
+      - "127.0.0.1:${OBS_PORT:-18000}:8000"
     volumes:
       - ./data:/data
     # Whole backend budget: 4 vCPU / 4 GiB

@@ -168,12 +168,27 @@ def api_overview(qs):
 
 
 def api_rate(qs):
+    """Objects stored per second. whole=1 covers the run from first to last write,
+    bucketed to at most `points` buckets (value = mean objects/s in the bucket)."""
     tid = _tid(qs)
-    secs = _int(qs, "seconds", 300, 10, 86400)
-    rows = STORE.reader().execute(
-        "SELECT sec, objects, batches FROM ingest_seconds WHERE test_id=? AND sec>=? ORDER BY sec",
-        (tid, int(time.time()) - secs)).fetchall()
-    return {"test_id": tid, "points": rows}
+    db = STORE.reader()
+    if qs.get("whole"):
+        r = db.execute("SELECT first_seen, last_seen FROM runs WHERE test_id=?", (tid,)).fetchone()
+        if not r:
+            return {"test_id": tid, "start": None, "bucket": 1, "points": []}
+        start, end = int(r[0]), int(max(r[1], time.time() if time.time() - r[1] < 5 else r[1]))
+    else:
+        end = int(time.time())
+        start = end - _int(qs, "seconds", 300, 10, 86400)
+    n = _int(qs, "points", 240, 10, 2000)
+    bucket = max(1, -(-(end - start + 1) // n))
+    rows = db.execute(
+        "SELECT (sec-?)/? AS b, sum(objects), sum(batches) FROM ingest_seconds WHERE test_id=? AND sec BETWEEN ? AND ? "
+        "GROUP BY b ORDER BY b", (start, bucket, tid, start, end)).fetchall()
+    have = {b: (o, bt) for b, o, bt in rows}
+    nb = (end - start) // bucket + 1
+    pts = [[start + i * bucket, round(have.get(i, (0, 0))[0] / bucket, 1)] for i in range(nb)]
+    return {"test_id": tid, "start": start, "end": end, "bucket": bucket, "points": pts}
 
 
 def api_tree(qs):
