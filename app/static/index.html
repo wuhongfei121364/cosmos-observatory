@@ -32,7 +32,8 @@ pre{margin:0;padding:10px;font:12px/1.4 ui-monospace,Menlo,monospace;white-space
 canvas{display:block;width:100%}.legend{display:flex;flex-wrap:wrap;gap:8px;padding:6px 10px;font-size:11px;color:var(--mute)}
 .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
 .log div{padding:3px 10px;border-bottom:1px solid var(--line);font-size:12px}.muted{color:var(--mute)}
-.split{display:flex;flex-direction:column;gap:10px;min-height:0}
+.split{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+main>*{min-width:0}
 </style>
 </head>
 <body>
@@ -129,7 +130,7 @@ async function attrs(){const d=await j('/api/attrs?'+qp({test_id:S.tid,type_id:S
    <div class="bar" style="width:${a.count/mx*100}%"></div></div>`).join('');}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));S.tab=b.dataset.t;
-  ['list','map','attrs'].forEach(t=>$('#t-'+t).style.display=t===S.tab?'flex':'none');reloadTab()});
+  ['list','map','attrs'].forEach(t=>$('#t-'+t).style.display=t===S.tab?(t==='attrs'?'block':'flex'):'none');reloadTab()});
 function reloadTab(){$('#scope').textContent='范围：'+S.typeName+'（含子类）';if(S.tab==='list')list(false);else if(S.tab==='map')map();else attrs();}
 async function refreshAll(){await loadRuns();if(!S.tid)return;await Promise.all([overview(),rate(),tree()]);reloadTab();}
 async function tick(){try{await loadRuns();if(S.tid)await Promise.all([overview(),rate()])}catch(e){$('#status').textContent='连接中断，重试中…'}}
