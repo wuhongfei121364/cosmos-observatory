@@ -1,0 +1,32 @@
+services:
+  observatory:
+    build: .
+    image: cosmos-observatory:latest
+    container_name: cosmos-observatory
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/data
+    # Whole backend budget: 4 vCPU / 4 GiB
+    cpus: 4
+    mem_limit: 4g
+    memswap_limit: 4g
+    restart: unless-stopped
+
+  # Object generator from the exam package. Load it first:
+  #   docker load -i <发题包>/flightgen-image.tar
+  # Start with: docker compose --profile gen up -d
+  object-source:
+    image: talkingdata/flightgen:exam-v4-f1
+    container_name: object-source
+    profiles: ["gen"]
+    cpuset: "0"
+    cpus: 1
+    mem_limit: 256m
+    memswap_limit: 256m
+    ports:
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - ./generator-runs:/runs
+    depends_on:
+      - observatory

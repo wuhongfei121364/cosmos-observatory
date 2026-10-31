@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>宇宙万物观测站 · Cosmos Observatory</title>
+<style>
+:root{--bg:#0b0f17;--panel:#121826;--line:#232c3f;--text:#dde4f0;--mute:#8592a8;--acc:#6aa8ff;--ok:#4cc38a;--warn:#f2b84b;--bad:#ef6b6b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.45 -apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line)}
+header h1{font-size:16px;margin:0;font-weight:600}header select,input{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.live{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;margin-right:6px;box-shadow:0 0 6px var(--ok)}
+.kpis{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;padding:10px 16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}.kpi b{display:block;font-size:18px;font-variant-numeric:tabular-nums}.kpi span{color:var(--mute);font-size:11px}
+main{display:grid;grid-template-columns:300px 1fr 380px;gap:10px;padding:0 16px 16px;height:calc(100vh - 128px)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;min-height:0}
+.panel h2{font-size:12px;color:var(--mute);margin:0;padding:8px 10px;border-bottom:1px solid var(--line);font-weight:500;display:flex;justify-content:space-between;align-items:center}
+.scroll{overflow:auto;flex:1;min-height:0}
+.tree ul{list-style:none;margin:0;padding-left:14px}.tree>ul{padding-left:6px}
+.node{display:flex;justify-content:space-between;padding:2px 6px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.node:hover{background:#1b2336}.node.sel{background:#1f3355}.node .c{color:var(--mute);font-variant-numeric:tabular-nums;margin-left:8px}
+.tog{display:inline-block;width:12px;color:var(--mute)}
+.tabs{display:flex;gap:2px}.tabs button{background:none;border:0;color:var(--mute);padding:4px 10px;cursor:pointer;border-radius:5px}.tabs button.on{background:#1f3355;color:var(--text)}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+th{color:var(--mute);font-weight:500;position:sticky;top:0;background:var(--panel)}tbody tr{cursor:pointer}tbody tr:hover{background:#1b2336}
+.tool{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line)}.tool input{flex:1}
+button.b{background:#1f3355;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
+pre{margin:0;padding:10px;font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all}
+.crumb{padding:8px 10px;color:var(--acc);border-bottom:1px solid var(--line)}
+.attr{padding:6px 10px;border-bottom:1px solid var(--line)}.attr .k{font-weight:600}.attr .m{color:var(--mute);font-size:11px}
+.bar{height:4px;background:var(--acc);border-radius:2px;margin-top:3px}
+canvas{display:block;width:100%}.legend{display:flex;flex-wrap:wrap;gap:8px;padding:6px 10px;font-size:11px;color:var(--mute)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.log div{padding:3px 10px;border-bottom:1px solid var(--line);font-size:12px}.muted{color:var(--mute)}
+.split{display:flex;flex-direction:column;gap:10px;min-height:0}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="live" id="live"></span>宇宙万物观测站</h1>
+  <label class="muted">观测批次 <select id="run"></select></label>
+  <span class="muted" id="status"></span>
+</header>
+<section class="kpis" id="kpis"></section>
+<main>
+  <div class="panel"><h2>分类树 <span id="treeRev" class="muted"></span></h2><div class="scroll tree" id="tree"></div></div>
+  <div class="split">
+    <div class="panel" style="flex:0 0 150px"><h2>实时接收速率（对象/秒，近 5 分钟）<span id="rateNow"></span></h2><canvas id="rate" height="110"></canvas></div>
+    <div class="panel" style="flex:1">
+      <h2><span class="tabs"><button data-t="list" class="on">对象</button><button data-t="map">星图</button><button data-t="attrs">属性探索</button></span><span id="scope" class="muted"></span></h2>
+      <div id="t-list" class="scroll" style="display:flex;flex-direction:column">
+        <div class="tool"><input id="q" placeholder="按名称或 ID 搜索，例如：恒星 / 飞机 / run-001-42"><select id="frame"><option value="">全部坐标系</option></select><button class="b" id="go">搜索</button></div>
+        <div class="scroll"><table><thead><tr><th>名称</th><th>类型</th><th>坐标系</th><th>位置</th><th>时间</th><th>#</th></tr></thead><tbody id="rows"></tbody></table>
+        <div style="padding:8px;text-align:center"><button class="b" id="more" style="display:none">加载更多</button></div></div>
+      </div>
+      <div id="t-map" style="display:none;flex:1;flex-direction:column;min-height:0">
+        <div class="tool"><select id="mapFrame"><option value="galactic">银河坐标 (ly)</option><option value="stellar_system">恒星系 </option><option value="local_surface">地表 (m)</option></select><span class="muted" id="mapInfo" style="align-self:center"></span></div>
+        <canvas id="map" style="flex:1;min-height:0"></canvas><div class="legend" id="legend"></div>
+      </div>
+      <div id="t-attrs" class="scroll" style="display:none"></div>
+    </div>
+  </div>
+  <div class="split">
+    <div class="panel" style="flex:1"><h2>对象详情</h2><div id="crumb" class="crumb muted">点击任一对象查看</div><div class="scroll"><pre id="detail"></pre></div></div>
+    <div class="panel" style="flex:0 0 200px"><h2>世界在变化：分类树修订 / 拒收记录</h2><div class="scroll log" id="log"></div></div>
+  </div>
+</main>
+<script>
+const $=s=>document.querySelector(s), fmt=n=>n==null?'–':Number(n).toLocaleString('zh-CN');
+const PAL=['#6aa8ff','#4cc38a','#f2b84b','#ef6b6b','#b48cff','#4fd1d9','#ff8fc7','#c2d94c','#ff9f5a','#9aa5b8','#7ee0a8','#e0c27e'];
+let S={tid:'',type:null,typeName:'全部',tab:'list',before:null,open:new Set([1]),tree:null};
+async function j(u){const r=await fetch(u);if(!r.ok)throw new Error(await r.text());return r.json()}
+const qp=o=>Object.entries(o).filter(([k,v])=>v!==null&&v!==''&&v!==undefined).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+
+async function loadRuns(){const runs=await j('/api/runs');const sel=$('#run');const cur=S.tid;
+  sel.innerHTML=runs.map(r=>`<option value="${r.test_id}">${r.test_id} · ${fmt(r.objects)} 个对象</option>`).join('')||'<option value="">（等待数据）</option>';
+  if(!cur&&runs[0])S.tid=runs[0].test_id; sel.value=S.tid;}
+$('#run').onchange=e=>{S.tid=e.target.value;S.type=null;S.typeName='全部';refreshAll()};
+
+async function overview(){const o=await j('/api/overview?'+qp({test_id:S.tid}));const r=o.run||{};const m=o.server.metrics||{};
+  const k=[['对象总数',fmt(r.objects)],['接收批次',fmt(r.batches)],['近 10 秒速率',fmt(Math.round(o.rate_10s))+' /s'],['已去重批次',fmt(r.dup_batches)],
+   ['拒收坏批次',fmt(r.rejected)],['分类树修订',fmt(r.tree_revision)],['类型数',fmt(o.server.types_known)],['平均提交耗时',o.server.commit_ms_avg==null?'–':o.server.commit_ms_avg+' ms']];
+  $('#kpis').innerHTML=k.map(([a,b])=>`<div class="kpi"><b>${b}</b><span>${a}</span></div>`).join('');
+  $('#status').textContent='写入队列 '+o.server.queue+' · 每 2 秒刷新';
+  const fs=$('#frame');if(fs.options.length<=1)Object.keys(o.frames).forEach(f=>fs.add(new Option(f+' ('+fmt(o.frames[f])+')',f)));}
+
+async function rate(){const d=await j('/api/rate?'+qp({test_id:S.tid,seconds:300}));const c=$('#rate'),x=c.getContext('2d');
+  const W=c.width=c.clientWidth*devicePixelRatio,H=c.height=110*devicePixelRatio;x.clearRect(0,0,W,H);
+  const now=Math.floor(Date.now()/1000),m=new Map(d.points.map(p=>[p[0],p[1]]));const vals=[];for(let s=now-299;s<=now;s++)vals.push(m.get(s)||0);
+  const mx=Math.max(10,...vals);x.strokeStyle='#232c3f';x.fillStyle='#8592a8';x.font=10*devicePixelRatio+'px sans-serif';
+  [0,.5,1].forEach(f=>{const y=H-4-(H-16)*f;x.beginPath();x.moveTo(0,y);x.lineTo(W,y);x.stroke();x.fillText(fmt(Math.round(mx*f)),4,y-3)});
+  x.beginPath();vals.forEach((v,i)=>{const X=i/(vals.length-1)*W,Y=H-4-(H-16)*v/mx;i?x.lineTo(X,Y):x.moveTo(X,Y)});x.strokeStyle='#6aa8ff';x.lineWidth=1.5*devicePixelRatio;x.stroke();
+  $('#rateNow').textContent='峰值 '+fmt(Math.max(...vals))+' /s';$('#live').style.background=vals.slice(-5).some(v=>v>0)?'#4cc38a':'#8592a8';}
+
+function renderTree(n,depth=0){const has=n.children.length,open=S.open.has(n.id);
+  return `<li><div class="node ${S.type===n.id?'sel':''}" data-id="${n.id}" data-name="${esc(n.name)}"><span><span class="tog" data-tog="${n.id}">${has?(open?'▾':'▸'):''}</span>${esc(n.name)}</span><span class="c">${fmt(n.total)}</span></div>
+  ${has&&open?'<ul>'+n.children.map(c=>renderTree(c,depth+1)).join('')+'</ul>':''}</li>`}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function tree(){const t=await j('/api/tree?'+qp({test_id:S.tid}));S.tree=t;$('#treeRev').textContent='修订 '+t.revision;
+  $('#tree').innerHTML='<ul>'+t.roots.map(r=>renderTree(r)).join('')+'</ul>';
+  const lg=await j('/api/rejections?'+qp({test_id:S.tid}));
+  $('#log').innerHTML=t.changes.map(c=>`<div>修订 ${c[0]} · <b>${c[1]==='move'?'迁移':'重命名'}</b> #${c[2]} → ${esc(c[4])} <span class="muted">(父 ${c[3]})</span></div>`).join('')+
+   lg.items.map(r=>`<div style="color:var(--bad)">拒收 batch ${r[2]} · ${esc(r[3])} <span class="muted">${new Date(r[0]*1000).toLocaleTimeString()}</span></div>`).join('')||'<div class="muted">暂无</div>';}
+$('#tree').onclick=e=>{const tg=e.target.closest('[data-tog]');if(tg){const id=+tg.dataset.tog;S.open.has(id)?S.open.delete(id):S.open.add(id);tree();return}
+  const n=e.target.closest('.node');if(!n)return;const id=+n.dataset.id;S.type=S.type===id?null:id;S.typeName=S.type?n.dataset.name:'全部';S.open.add(id);tree();reloadTab()};
+
+async function list(append){const d=await j('/api/objects?'+qp({test_id:S.tid,type_id:S.type,q:$('#q').value.trim(),frame_kind:$('#frame').value,before_seq:append?S.before:null,limit:100}));
+  const h=d.items.map(o=>`<tr data-id="${esc(o.id)}"><td>${esc(o.name)}</td><td>${esc(o.type_name)}</td><td>${o.frame_kind||''}</td><td>${o.x==null?'—':[o.x,o.y,o.z].map(v=>Math.round(v)).join(', ')}</td><td>${new Date(o.ts).toLocaleTimeString()}</td><td class="muted">${o.seq}</td></tr>`).join('');
+  $('#rows').innerHTML=append?$('#rows').innerHTML+h:h;S.before=d.next_before_seq;$('#more').style.display=S.before==null?'none':'';}
+$('#go').onclick=()=>list(false);$('#q').onkeydown=e=>{if(e.key==='Enter')list(false)};$('#frame').onchange=()=>list(false);$('#more').onclick=()=>list(true);
+$('#rows').onclick=async e=>{const tr=e.target.closest('tr');if(!tr)return;showObj(tr.dataset.id)};
+async function showObj(id){const d=await j('/api/object?'+qp({test_id:S.tid,id}));$('#crumb').textContent=d.type_path.map(p=>p.name).join(' / ')+'  ·  batch '+d.batch_id;$('#detail').textContent=JSON.stringify(d.object,null,2);}
+
+async function map(){const fk=$('#mapFrame').value;const d=await j('/api/map?'+qp({test_id:S.tid,frame_kind:fk,limit:8000}));const c=$('#map'),x=c.getContext('2d');
+  const W=c.width=c.clientWidth*devicePixelRatio,H=c.height=c.clientHeight*devicePixelRatio;x.fillStyle='#070a10';x.fillRect(0,0,W,H);
+  const pts=d.points;if(!pts.length){$('#mapInfo').textContent='该坐标系暂无对象';return}
+  let xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);const q=(a,f)=>{const s=[...a].sort((m,n)=>m-n);return s[Math.floor(f*(s.length-1))]};
+  const x0=q(xs,.01),x1=q(xs,.99),y0=q(ys,.01),y1=q(ys,.99);const cats=Object.keys(d.categories),col=t=>PAL[cats.indexOf(String(t))%PAL.length];
+  S.mapPts=[];for(const p of pts){const X=(p[0]-x0)/(x1-x0||1)*(W-20)+10,Y=H-((p[1]-y0)/(y1-y0||1)*(H-20)+10);x.fillStyle=col(p[2]);x.globalAlpha=.75;x.fillRect(X,Y,2*devicePixelRatio,2*devicePixelRatio);S.mapPts.push([X,Y,p[3]])}
+  x.globalAlpha=1;$('#legend').innerHTML=cats.map(t=>`<span><i style="background:${col(t)}"></i>${esc(d.categories[t])}</span>`).join('');
+  $('#mapInfo').textContent=`最近 ${fmt(pts.length)} 个对象 · 点击光点查看详情`;}
+$('#mapFrame').onchange=map;
+$('#map').onclick=e=>{const r=e.target.getBoundingClientRect(),X=(e.clientX-r.left)*devicePixelRatio,Y=(e.clientY-r.top)*devicePixelRatio;let b=null,bd=1e9;
+  for(const p of S.mapPts||[]){const dd=(p[0]-X)**2+(p[1]-Y)**2;if(dd<bd){bd=dd;b=p}}if(b&&bd<400)showObj(b[2])};
+
+async function attrs(){const d=await j('/api/attrs?'+qp({test_id:S.tid,type_id:S.type}));const mx=Math.max(1,...d.attributes.map(a=>a.count));
+  $('#t-attrs').innerHTML=`<div class="attr muted">基于最近 ${d.sampled} 个对象自动推断的属性结构（数据格式未预先给定）</div>`+d.attributes.map(a=>`<div class="attr"><span class="k">${esc(a.key)}</span>
+   <span class="m"> · 出现 ${a.count} 次 · ${Object.entries(a.kinds).map(([k,v])=>k+':'+v).join(' ')}${a.min!=null?` · 范围 ${a.min} ~ ${a.max}`:''}${a.top.length?' · 常见值 '+a.top.map(t=>esc(t[0])+'('+t[1]+')').join(', '):''}</span>
+   <div class="bar" style="width:${a.count/mx*100}%"></div></div>`).join('');}
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));S.tab=b.dataset.t;
+  ['list','map','attrs'].forEach(t=>$('#t-'+t).style.display=t===S.tab?'flex':'none');reloadTab()});
+function reloadTab(){$('#scope').textContent='范围：'+S.typeName+'（含子类）';if(S.tab==='list')list(false);else if(S.tab==='map')map();else attrs();}
+async function refreshAll(){await loadRuns();if(!S.tid)return;await Promise.all([overview(),rate(),tree()]);reloadTab();}
+async function tick(){try{await loadRuns();if(S.tid)await Promise.all([overview(),rate()])}catch(e){$('#status').textContent='连接中断，重试中…'}}
+refreshAll();setInterval(tick,2000);setInterval(()=>{if(S.tid)tree()},6000);
+</script>
+</body>
+</html>

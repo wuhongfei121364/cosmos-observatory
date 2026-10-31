@@ -1,0 +1,2 @@
+# Intentionally empty: the service uses only the Python 3.8+ standard library
+# (http.server, sqlite3, json, threading). Nothing to pip install.
